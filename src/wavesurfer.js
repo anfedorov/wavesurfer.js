@@ -10,28 +10,28 @@
 
 var WaveSurfer = {
     defaultParams: {
-        height        : 128,
-        waveColor     : '#999',
-        progressColor : '#555',
-        cursorColor   : '#333',
-        cursorWidth   : 1,
-        skipLength    : 2,
-        minPxPerSec   : 20,
-        pixelRatio    : window.devicePixelRatio,
-        fillParent    : true,
-        scrollParent  : false,
-        hideScrollbar : false,
-        normalize     : false,
-        audioContext  : null,
-        container     : null,
-        dragSelection : true,
-        loopSelection : true,
-        audioRate     : 1,
-        interact      : true,
-        splitChannels : false,
-        renderer      : 'Canvas',
-        backend       : 'WebAudio',
-        mediaType     : 'audio'
+        height         : 200,
+        waveColor      : '#999',
+        progressColor  : '#555',
+        cursorColor    : '#333',
+        maxVolumeColor : '#aaa',
+        cursorWidth    : 1,
+        skipLength     : 2,
+        minPxPerSec    : 20,
+        pixelRatio     : window.devicePixelRatio,
+        fillParent     : true,
+        scrollParent   : false,
+        hideScrollbar  : false,
+        normalize      : false,
+        audioContext   : null,
+        container      : null,
+        dragSelection  : true,
+        loopSelection  : true,
+        audioRate      : 1,
+        splitChannels  : false,
+        renderer       : 'Canvas',
+        backend        : 'WebAudio',
+        mediaType      : 'audio'
     },
 
     init: function (params) {
@@ -72,26 +72,17 @@ var WaveSurfer = {
     },
 
     createDrawer: function () {
-        var my = this;
-
         this.drawer = Object.create(WaveSurfer.Drawer[this.params.renderer]);
         this.drawer.init(this.container, this.params);
 
-        this.drawer.on('redraw', function () {
-            my.drawBuffer();
-            my.drawer.progress(my.backend.getPlayedPercents());
+        this.drawer.on('redraw', () => {
+            this.drawBuffer();
+            this.drawer.progress(this.backend.getPlayedPercents());
         });
 
         // Click-to-seek
-        this.drawer.on('click', function (e, progress) {
-            setTimeout(function () {
-                my.seekTo(progress);
-            }, 0);
-        });
-
-        // Relay the scroll event from the drawer
-        this.drawer.on('scroll', function (e) {
-            my.fireEvent('scroll', e);
+        this.drawer.on('click', (e, progress) => {
+            setTimeout(() => this.seekTo(progress), 0);
         });
     },
 
@@ -118,9 +109,13 @@ var WaveSurfer = {
         this.backend.on('play', function () { my.fireEvent('play'); });
         this.backend.on('pause', function () { my.fireEvent('pause'); });
 
-        this.backend.on('audioprocess', function (time) {
-            my.drawer.progress(my.backend.getPlayedPercents());
-            my.fireEvent('audioprocess', time);
+        this.backend.on('audioprocess', (time) => {
+            const p = this.backend.getPlayedPercents();
+            this.drawer.progress(p);
+            if (this.customVolume) {
+                this.setVolume(this.customVolume.fn(p));
+            }
+            this.fireEvent('audioprocess', time);
         });
     },
 
@@ -170,11 +165,17 @@ var WaveSurfer = {
 
     seekTo: function (progress) {
         var paused = this.backend.isPaused();
+
         // avoid small scrolls while paused seeking
         var oldScrollParent = this.params.scrollParent;
         if (paused) {
             this.params.scrollParent = false;
         }
+
+        if (progress >= 1) {
+            progress = 0.999;
+        }
+
         this.backend.seekTo(progress * this.getDuration());
         this.drawer.progress(this.backend.getPlayedPercents());
 
@@ -202,6 +203,12 @@ var WaveSurfer = {
         this.backend.setVolume(newVolume);
     },
 
+    setCustomVolume: function (vol) {
+        this.customVolume = vol;
+        this.drawer.customVolume = vol;
+        this.backend.customVolume = vol;
+    },
+
     /**
      * Set the playback rate.
      *
@@ -210,6 +217,13 @@ var WaveSurfer = {
      */
     setPlaybackRate: function (rate) {
         this.backend.setPlaybackRate(rate);
+    },
+
+    /**
+     * Set the minimum duration - horizontal width will be maxed out at this.
+     */
+    setMinDuration: function (value) {
+        this.minDuration = value;
     },
 
     /**
@@ -238,13 +252,10 @@ var WaveSurfer = {
         this.drawBuffer();
     },
 
-    toggleInteraction: function () {
-        this.params.interact = !this.params.interact;
-    },
-
     drawBuffer: function () {
+        var dur = this.getDuration();
         var nominalWidth = Math.round(
-            this.getDuration() * this.params.minPxPerSec * this.params.pixelRatio
+            dur * this.params.minPxPerSec * this.params.pixelRatio
         );
         var parentWidth = this.drawer.getWidth();
         var width = nominalWidth;
@@ -254,8 +265,21 @@ var WaveSurfer = {
             width = parentWidth;
         }
 
-        var peaks = this.backend.getPeaks(width);
-        this.drawer.drawPeaks(peaks, width);
+        var peakWidth = width;
+
+        if (dur < this.minDuration) {
+            peakWidth *= (dur / this.minDuration);
+        }
+
+        var peaks = this.backend.getPeaks(peakWidth);
+
+        this.drawer.clearWave();
+        this.drawer.setWidth(width);
+
+        if (this.customVolume) { this.drawer.drawVolumeLine(); }
+        this.drawer.peakWidth = peakWidth;
+        this.drawer.drawPeaks(peaks, this.customVolume);
+
         this.fireEvent('redraw', peaks, width);
     },
 

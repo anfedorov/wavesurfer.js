@@ -49,6 +49,12 @@ WaveSurfer.util = {
         xhr.send();
         ajax.xhr = xhr;
         return ajax;
+    },
+
+    misc: {
+        dist(x1, y1, x2, y2) {
+            return Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+        }
     }
 };
 
