@@ -85,12 +85,9 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
         const vResize = 1 - this.TOP_BORDER / this.height;
         const hResize = 1 - this.RIGHT_BORDER / this.width;
 
-        // console.log(this.RIGHT_BORDER, this.width, hResize)
-
         WaveSurfer.Drawer.setupWrapperEvents.call(this);
 
         this.un('mousedown');
-        console.log(this.handlers['mousedown']);
         this.on('mousedown', (e, x, y) => {
             var s = this.params.pixelRatio;
             var h = this.height;
@@ -129,9 +126,8 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
 
         this.un('mouseup');
         this.on('mouseup', (e, x, y) => {
-            x = this.bound(x);
-            y = this.bound(y);
             if (this.dragging) {
+                (this.dragging.save || () => {})();
                 this.updateCursorStyle('');
                 delete this.dragging;
                 this.clearWave();
