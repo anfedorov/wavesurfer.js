@@ -94,7 +94,7 @@ WaveSurfer.Drawer = {
 
         if (pos < this.lastPos || pos - this.lastPos >= minPxDelta) {
             this.lastPos = pos;
-            this.updateProgress(progress);
+            return this.updateProgress(progress);
         }
     },
 

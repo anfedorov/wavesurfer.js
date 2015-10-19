@@ -114,7 +114,7 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
 
             var y2 = this.bound(v.fn(x));
 
-            if (this.dist(x, y, x, y2) < 10) {
+            if (this.dist(x, y, x, y2) < 12) {
                 this.dragging = this.customVolume;
                 this.updateCursorStyle('grabbed');
                 return;
@@ -127,7 +127,7 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
         this.un('mouseup');
         this.on('mouseup', (e, x, y) => {
             if (this.dragging) {
-                (this.dragging.save || () => {})();
+                this.dragging.save && this.dragging.save();
                 this.updateCursorStyle('');
                 delete this.dragging;
                 this.clearWave();
@@ -222,7 +222,7 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
     },
 
     drawVolumeLine(x, y) {
-        const hoverSize = 7;
+        const hoverSize = 10;
 
         var vResize = 1 - this.TOP_BORDER / this.height,
             hResize = 1 - this.RIGHT_BORDER / this.width,
@@ -278,10 +278,9 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
     },
 
     updateProgress(progress) {
-        var pos = Math.round(
-            this.peakWidth * progress * (this.width - this.RIGHT_BORDER) / this.width
-        ) / window.devicePixelRatio;
+        const pos = Math.round(progress * this.peakWidth * (this.width - this.RIGHT_BORDER) / this.width) / window.devicePixelRatio;
         this.style(this.progressWave, { width: pos + 'px' });
+        return progress * this.peakWidth / this.width;
     },
 
     // pixel distance between points in [0, 1]

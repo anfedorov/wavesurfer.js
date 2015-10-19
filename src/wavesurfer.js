@@ -110,10 +110,11 @@ var WaveSurfer = {
         this.backend.on('pause', function () { my.fireEvent('pause'); });
 
         this.backend.on('audioprocess', (time) => {
-            const p = this.backend.getPlayedPercents();
-            this.drawer.progress(p);
-            if (this.customVolume) {
-                this.setVolume(this.customVolume.fn(p));
+            const p = this.backend.getPlayedPercents(),
+                  tp = this.drawer.progress(p);
+            if (this.customVolume && tp !== undefined) {
+                const newVolume = this.customVolume.fn(tp)
+                this.setVolume(Math.min(Math.max(newVolume, 0), 1));
             }
             this.fireEvent('audioprocess', time);
         });
