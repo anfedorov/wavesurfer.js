@@ -14,7 +14,7 @@ var WaveSurfer = {
         waveColor      : '#999',
         progressColor  : '#555',
         cursorColor    : '#333',
-        maxVolumeColor : '#aaa',
+        maxVolumeColor : '#c59bc5',
         cursorWidth    : 1,
         skipLength     : 2,
         minPxPerSec    : 20,
@@ -174,7 +174,7 @@ var WaveSurfer = {
         }
 
         if (progress >= 1) {
-            progress = 0.9999;
+            progress = 0.9999;  // TODO: this makes a pop sound. find a better way.
         }
 
         this.backend.seekTo(progress * this.getDuration());
