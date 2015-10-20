@@ -10,7 +10,7 @@
 
 var WaveSurfer = {
     defaultParams: {
-        height         : 200,
+        height         : 150,
         waveColor      : '#999',
         progressColor  : '#555',
         cursorColor    : '#333',
@@ -164,7 +164,7 @@ var WaveSurfer = {
         this.drawer.recenter(progress);
     },
 
-    seekTo: function (progress) {
+    seekTo(progress) {
         var paused = this.backend.isPaused();
 
         // avoid small scrolls while paused seeking
@@ -174,7 +174,7 @@ var WaveSurfer = {
         }
 
         if (progress >= 1) {
-            progress = 0.999;
+            progress = 0.9999;
         }
 
         this.backend.seekTo(progress * this.getDuration());
@@ -186,6 +186,10 @@ var WaveSurfer = {
         }
         this.params.scrollParent = oldScrollParent;
         this.fireEvent('seek', progress);
+    },
+
+    seekToTime(t) {
+        this.seekTo(t / (this.minDuration || this.getDuration()));
     },
 
     stop: function () {

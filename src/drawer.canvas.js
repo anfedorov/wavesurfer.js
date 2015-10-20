@@ -65,20 +65,30 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
     },
 
     onMouseMove(e, x, y) {
+        if (!this.dragging && (x < 0 || x > 1 || y < 0 || y > 1)) return;
+        if (this.dragging && this.dragging != this.customVolume && this.customVolume.pointsOfInterest[0] != this.dragging) return;
+
         const vResize = 1 - this.TOP_BORDER / this.height,
               hResize = 1 - this.RIGHT_BORDER / this.width;
 
         if (this.customVolume) {
-            var ctx = this.volumeCc;
             if (this.dragging) {
                 this.dragging.dragTo(x / hResize, y / vResize);
                 this.clearWave();
                 this.drawBars();
             }
-
+            var ctx = this.volumeCc;
             ctx.clearRect(0, 0, this.width, this.height);
             this.drawVolumeLine(x, y);
         }
+    },
+
+    rerender() {
+        var ctx = this.volumeCc;
+        this.clearWave();
+        ctx.clearRect(0, 0, this.width, this.height);
+        this.drawBars();
+        this.drawVolumeLine();
     },
 
     setupWrapperEvents() {
@@ -221,7 +231,7 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
         ctx.fill();
     },
 
-    drawVolumeLine(x, y) {
+    drawVolumeLine(x=Infinity, y=Infinity) {
         const hoverSize = 10;
 
         var vResize = 1 - this.TOP_BORDER / this.height,
