@@ -65,7 +65,7 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
     },
 
     onMouseMove(e, x, y) {
-        if (!this.dragging && (x < 0 || x > 1 || y < 0 || y > 1)) return;
+        if (!this.dragging && (x < -0.2 || x > 1.2 || y < -0.2 || y > 1.2)) return;
         if (this.dragging && this.dragging != this.customVolume && this.customVolume.pointsOfInterest[0] != this.dragging) return;
 
         const vResize = 1 - this.TOP_BORDER / this.height,
