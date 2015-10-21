@@ -81,7 +81,7 @@ var WaveSurfer = {
         });
 
         // Click-to-seek
-        this.drawer.on('click', (e, progress) => {
+        this.drawer.on('poschange', (e, progress) => {
             setTimeout(() => this.seekTo(progress), 0);
         });
     },

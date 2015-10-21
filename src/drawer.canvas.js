@@ -66,7 +66,16 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
 
     onMouseMove(e, x, y) {
         if (!this.dragging && (x < -0.2 || x > 1.2 || y < -0.2 || y > 1.2)) return;
-        if (this.dragging && this.dragging != this.customVolume && this.customVolume.pointsOfInterest[0] != this.dragging) return;
+        if (this.dragging
+         && this.dragging !== this.customVolume
+         && this.customVolume.pointsOfInterest[0] !== this.dragging
+         && this.dragging !== true
+        ) return;
+
+        if (this.dragging === true) {
+            this.fireEvent('poschange', e, this.bound(x, y), y);
+            return;
+        }
 
         const vResize = 1 - this.TOP_BORDER / this.height,
               hResize = 1 - this.RIGHT_BORDER / this.width;
@@ -130,8 +139,10 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
                 return;
             }
 
+            this.dragging = true;
+
             // escalate it to wavesurfer, which manages position changes
-            this.fireEvent('click', e, x, y);
+            this.fireEvent('poschange', e, x, y);
         });
 
         this.un('mouseup');
@@ -139,7 +150,7 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
             if (this.dragging) {
                 this.dragging.save && this.dragging.save();
                 this.updateCursorStyle('');
-                delete this.dragging;
+                this.dragging = false;
                 this.clearWave();
                 this.drawBars();
             }
@@ -248,6 +259,7 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
         var hover = Boolean(this.dragging) || Math.abs(y - fx) * h < hoverSize * window.devicePixelRatio;
 
         ctx.lineWidth = 1;
+        ctx.strokeStyle = hover ? "black" : "lightgray";
         ctx.shadowColor = "black";
         ctx.shadowBlur = hover ? 3 : 0;
 
@@ -259,6 +271,8 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
         }
         // ctx.lineTo(xv, h * (1 - yv * vResize));
         ctx.stroke();
+
+        ctx.strokeStyle = "black";
 
         // draw the points of interest
         if (hover && v.pointsOfInterest) {
