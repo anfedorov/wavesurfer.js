@@ -82,8 +82,10 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
                 this.dragging.dragTo(x / hResize, y / vResize);
                 this.clearWave();
                 this.drawBars();
+                this.drawVolumeLine(x, y, true);
+            } else {
+                this.drawVolumeLine(x, y);
             }
-            this.drawVolumeLine(x, y);
         }
     },
 
@@ -237,7 +239,7 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
         ctx.fill();
     },
 
-    drawVolumeLine(x=Infinity, y=Infinity) {
+    drawVolumeLine(x=Infinity, y=Infinity, forceRedraw=false) {
         const hoverSize = 10;
 
         var vResize = 1 - this.TOP_BORDER / this.height,
@@ -269,7 +271,7 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
                 this.dist(x, y, this.bound(p.x), this.bound(yVal)) < r
             ]);
         }
-        if (angular.equals(hovering, v.hovering)) return;
+        if (!forceRedraw && angular.equals(hovering, v.hovering)) return;
         v.hovering = hovering;
 
         ctx.lineWidth = 1;
