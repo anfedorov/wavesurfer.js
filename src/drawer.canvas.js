@@ -73,7 +73,8 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
         ) return;
 
         if (this.dragging === true) {
-            this.fireEvent('poschange', e, this.bound(x, y), y);
+            x = x * this.width / (this.width - this.RIGHT_BORDER);
+            this.fireEvent('poschange', e, this.bound(x), y);
             return;
         }
 
