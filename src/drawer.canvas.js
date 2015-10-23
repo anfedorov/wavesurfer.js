@@ -9,10 +9,6 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
         return window.devicePixelRatio * 30;
     },
 
-    get hScale() {
-        return 1 - this.RIGHT_BORDER / this.width;
-    },
-
     createElements() {
         this.waveCanvas = this.wrapper.appendChild(
             this.style(document.createElement('canvas'), {
@@ -65,7 +61,7 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
     },
 
     onMouseMove(e, x, y) {
-        if (!this.dragging && (x < -0.2 || x > 1.2 || y < -0.2 || y > 1.2)) return;
+        if (!this.dragging && (x < -0.5 || x > 1.5 || y < -0.5 || y > 1.5)) return;
         if (this.dragging
          && this.dragging !== this.customVolume
          && this.customVolume.pointsOfInterest[0] !== this.dragging
@@ -87,8 +83,6 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
                 this.clearWave();
                 this.drawBars();
             }
-            var ctx = this.volumeCc;
-            ctx.clearRect(0, 0, this.width, this.height);
             this.drawVolumeLine(x, y);
         }
     },
@@ -259,10 +253,31 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
         var fx = this.bound(v.fn(x));
         var hover = Boolean(this.dragging) || Math.abs(y - fx) * h < hoverSize * window.devicePixelRatio;
 
+        var hovering = {
+            lineHover: hover,
+            poiHover: []
+        };
+        for (let p of (v.pointsOfInterest || [])) {
+            const r = (p.radius || 7) * window.devicePixelRatio;
+            const peakX = this.bound(p.x) * w;
+            const yVal = (peakX == 0 || peakX == w) ? v.fn(peakX / w) : p.y;
+            const peakY = h * (1 - this.bound(yVal) * vResize);
+
+            hovering.poiHover.push([
+                peakX,
+                peakY,
+                this.dist(x, y, this.bound(p.x), this.bound(yVal)) < r
+            ]);
+        }
+        if (angular.equals(hovering, v.hovering)) return;
+        v.hovering = hovering;
+
         ctx.lineWidth = 1;
         ctx.strokeStyle = hover ? "black" : "lightgray";
         ctx.shadowColor = "black";
         ctx.shadowBlur = hover ? 3 : 0;
+
+        ctx.clearRect(0, 0, this.width, this.height);
 
         // draw the volume line
         ctx.beginPath();
@@ -277,18 +292,16 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
 
         // draw the points of interest
         if (hover && v.pointsOfInterest) {
-            for (let p of v.pointsOfInterest || []) {
-                let r = (p.radius || 7) * window.devicePixelRatio;
+            (v.pointsOfInterest || []).forEach((p, i) => {
 
                 ctx.fillStyle = 'white';
 
-                const peakX = this.bound(p.x) * w;
-                const yVal = (peakX == 0 || peakX == w) ? v.fn(peakX / w) : p.y;
-                const peakY = h * (1 - this.bound(yVal) * vResize);
+                const r = (p.radius || 7) * window.devicePixelRatio;
+                const [peakX, peakY, hover] = hovering.poiHover[i];
 
                 this.drawCircle(ctx, peakX, peakY, r);
 
-                if (this.dist(x, y, this.bound(p.x), this.bound(yVal)) < r) {
+                if (hover) {
                     ctx.fillStyle = 'black';
                     this.updateCursorStyle('grab');
                 } else {
@@ -296,7 +309,7 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
                     this.updateCursorStyle('');
                 }
                 this.drawCircle(ctx, peakX, peakY, r);
-            }
+            });
         } else {
             this.updateCursorStyle('');
         }
