@@ -174,7 +174,8 @@ var WaveSurfer = {
         }
 
         if (progress >= 1) {
-            progress = 0.9999;  // TODO: this makes a pop sound. find a better way.
+            // TODO: this makes a pop sound. find a better way.
+            progress = paused ? 1 : 0.9999;
         }
 
         this.backend.seekTo(progress * this.getDuration());
