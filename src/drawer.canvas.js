@@ -94,7 +94,7 @@ WaveSurfer.util.extend(WaveSurfer.Drawer.Canvas, {
         this.clearWave();
         ctx.clearRect(0, 0, this.width, this.height);
         this.drawBars();
-        this.drawVolumeLine();
+        this.drawVolumeLine(Infinity, Infinity, true);
     },
 
     setupWrapperEvents() {
